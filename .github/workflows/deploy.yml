@@ -1,22 +1,39 @@
 name: deployment
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 jobs:
-    build-and-deploy:
-        runs-on: ubuntu-latest
-        steps:
-            - name: checkout code
-              uses: actions/checkout@v3
-            - name: Login to Docker Hub
-              uses: docker/login-action@v3
-              with:
-                  username: ${{ secrets.DOCKERHUB_USERNAME }}
-                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-            - name: Build and push Docker image
-              run: |
-                  docker build -t ${{secrets.DOCKERHUB_USERNAME}}/todofrontend:${{github.sha}} -f dockerfile .
-                  docker push ${{secrets.DOCKERHUB_USERNAME}}/todofrontend:${{github.sha}}
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{secrets.DOCKERHUB_USERNAME}}/todofrontend:${{github.sha}} -f dockerfile .
+          docker push ${{secrets.DOCKERHUB_USERNAME}}/todofrontend:${{github.sha}}
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{secrets.DOCKERHUB_USERNAME}}/todobackend:${{github.sha}} --build-arg DATABASE_URL=${{secrets.DATABASE_URL}} -f dockerfile .
+          docker push ${{secrets.DOCKERHUB_USERNAME}}/todobackend:${{github.sha}}
+      - name: Clone staging-ops repo, update image tags, and push tags
+        env:
+          PAT: ${{ secrets.PAT}}
+        run: |
+          git clone https://github.com/Govinda-Upadhya/deployment-argocd.git
+          ls -al
+          cd deployment-argocd
+          sed -i 's|image: govinda52/todofrontend:.*|image: govinda52/todofrontend:${{ github.sha }}|' manifest.yml
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Update backend server image tags to ${{ github.sha }}"
+          git push https://${PAT}@github.com/Govinda-Upadhya/deployment-argocd.git main
