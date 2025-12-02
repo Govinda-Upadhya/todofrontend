@@ -13,7 +13,7 @@ function App() {
   const [task, setTask] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const base_url = "http://localhost:3000";
+  const base_url = "http://kubernetes.anythingforall.com/backend";
 
   useEffect(() => {
     async function fetchTodos() {
