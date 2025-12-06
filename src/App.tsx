@@ -13,11 +13,10 @@ function App() {
   const [task, setTask] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const base_url = "http://kubernetes.anythingforall.com/backend";
 
   useEffect(() => {
     async function fetchTodos() {
-      const res = await axios.get(`${base_url}/todos`);
+      const res = await axios.get(`/backend/todos`);
       setTodos(res.data.todos);
     }
     fetchTodos();
@@ -26,7 +25,7 @@ function App() {
 
   const addTodo = async () => {
     if (!task.trim()) return;
-    const res = await axios.post(`${base_url}/todo`, { task });
+    const res = await axios.post(`/backend/todo`, { task });
     const newTodo: Todo = res.data.todo;
 
     setTodos([newTodo, ...todos]);
@@ -34,7 +33,7 @@ function App() {
   };
 
   const deleteTodo = async (id: string) => {
-    const res = await axios.delete(`${base_url}/todos/${id}`);
+    const res = await axios.delete(`/backend/todos/${id}`);
     if (res.data.message) {
       console.log(res.data.message);
       setTodos(todos.filter((t) => t.id !== id));
@@ -51,7 +50,7 @@ function App() {
   const saveEdit = async () => {
     if (!editText.trim()) return;
     const todo = todos.find((t) => t.id == editingId);
-    await axios.put(`${base_url}/todos/${editingId}`, {
+    await axios.put(`/backend/todos/${editingId}`, {
       task: editText,
       status: todo?.status,
     });
@@ -66,7 +65,7 @@ function App() {
 
   const toggleComplete = async (id: string) => {
     const todo = todos.find((t) => t.id === id);
-    await axios.put(`${base_url}/todos/${id}`, {
+    await axios.put(`/backend/todos/${id}`, {
       task: todo?.task,
       status: !todo?.status,
     });
